@@ -1,88 +1,67 @@
 local Aimbot = {}
--- by @Exunys
+
 local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
-local Holding = false
 
-_G.AimbotEnabled = true
-_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
-_G.AimPart = "Head" -- Where the aimbot script would lock at.
-_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
-
-function runcode(f) f() end 
+-- Use constants instead of global variables
+local AIMBOT_ENABLED = true
+local TEAM_CHECK = false
+local AIM_PART = "Head"
+local SENSITIVITY = 0.1 -- Adjust this value to your preference
 
 function Aimbot.GetClosestPlayer()
-	local MaximumDistance = math.huge
-	local Target = nil
+    local MaximumDistance = math.huge
+    local Target = nil
 
-	coroutine.wrap(function()
-		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
-	end)()
+    for _, v in ipairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and (not TEAM_CHECK or v.Team ~= LocalPlayer.Team) then
+            local Character = v.Character
+            if Character and Character:FindFirstChild("HumanoidRootPart") and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+                local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+                local ScreenPoint = Camera:WorldToScreenPoint(HumanoidRootPart.Position)
+                local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
 
-	for _, v in next, Players:GetPlayers() do
-		if v.Name ~= LocalPlayer.Name then
-			if _G.TeamCheck == true then
-				if v.Team ~= LocalPlayer.Team then
-					if v.Character ~= nil then
-						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                if VectorDistance < MaximumDistance then
+                    Target = v
+                    MaximumDistance = VectorDistance
+                end
+            end
+        end
+    end
 
-								if VectorDistance < MaximumDistance then
-									Target = v
-									MaximumDistance = VectorDistance
-								end
-							end
-						end
-					end
-				end
-			else
-				if v.Character ~= nil then
-					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-
-							if VectorDistance < MaximumDistance then
-								Target = v
-								MaximumDistance = VectorDistance
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return Target
+    return Target
 end
 
-function Aimbot.ExampleuserinputserviceAImbot()
-	runcode(function()
-		UserInputService.InputBegan:Connect(function(Input)
-			if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-				Holding = true
-			end
-		end)
+function Aimbot.StartAimbot()
+    UserInputService.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+            Holding = true
+        end
+    end)
 
-		UserInputService.InputEnded:Connect(function(Input)
-			if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-				Holding = false
-			end
-		end)
+    UserInputService.InputEnded:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+            Holding = false
+        end
+    end)
 
-		RunService.RenderStepped:Connect(function()
-			if Holding == true and _G.AimbotEnabled == true then
-				TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
-			end
-		end)
-	end)
-	return "Made by @Exunys"
+    RunService.RenderStepped:Connect(function()
+        if Holding and AIMBOT_ENABLED then
+            local closestPlayer = Aimbot.GetClosestPlayer()
+            if closestPlayer and closestPlayer.Character and closestPlayer.Character[AIM_PART] then
+                local targetPosition = closestPlayer.Character[AIM_PART].Position
+                local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPosition)
+                local tweenInfo = TweenInfo.new(SENSITIVITY, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+                TweenService:Create(Camera, tweenInfo, {CFrame = targetCFrame}):Play()
+            end
+        end
+    end)
 end
+
+Aimbot.StartAimbot()
 
 return Aimbot
