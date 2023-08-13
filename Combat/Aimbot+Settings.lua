@@ -62,6 +62,4 @@ function Aimbot.StartAimbot()
     end)
 end
 
-Aimbot.StartAimbot()
-
 return Aimbot
