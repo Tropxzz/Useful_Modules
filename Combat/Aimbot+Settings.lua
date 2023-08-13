@@ -9,7 +9,7 @@ local LocalPlayer = Players.LocalPlayer
 
 -- Use constants instead of global variables
 local AIMBOT_ENABLED = true
-local TEAM_CHECK = false
+Aimbot.TEAM_CHECK = false
 local AIM_PART = "Head"
 local SENSITIVITY = 0.1 -- Adjust this value to your preference
 
