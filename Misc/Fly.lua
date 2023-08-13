@@ -1,0 +1,3 @@
+-- Module cmds
+-- FlyLoadstring.Flying(true) -- enable fly
+-- FlyLoadstring.Flying(false) -- disable fly
